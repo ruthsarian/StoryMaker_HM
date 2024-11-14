@@ -69,7 +69,7 @@ When an ornament button is pressed, that ornament will start sending out packets
 |    ID | Ornament |
 | ----: | :------- |
 | `00` | ??? |
-| `01` | Haunted Mansion Tree Topper |
+| `01` | [The Haunted Mansion Tree Topper](https://www.hallmark.com/ornaments/keepsake-ornaments/disney-the-haunted-mansion-collection-the-haunted-mansion-musical-christmas-tree-topper-with-light-1QFM3927.html) |
 | `02` | [The Coffin in the Conservatory](https://www.hallmark.com/ornaments/keepsake-ornaments/disney-the-haunted-mansion-collection-the-coffin-in-the-conservatory-ornament-with-light-and-sound-4499QXD6757.html?source=igodigital) |
 | `03` | [Victor Geist](https://www.hallmark.com/ornaments/keepsake-ornaments/disney-the-haunted-mansion-collection-victor-geist-ornament-with-light-and-sound-4499QXD6749.html?source=igodigital) |
 | `04` | [Madame Leota](https://www.hallmark.com/ornaments/keepsake-ornaments/disney-the-haunted-mansion-collection-madame-leota-ornament-with-light-and-sound-4499QXD6747.html?source=igodigital) |

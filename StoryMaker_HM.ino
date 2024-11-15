@@ -1,4 +1,4 @@
-/* Story Maker HM v0.1 : ruthsarian@gmail.com
+/* Story Maker HM v0.2 : ruthsarian@gmail.com
  * --
  * A program for toying with Hallmark Storyteller Haunted Mansion ornaments
  * released in 2023 and 2024.
@@ -32,6 +32,20 @@
  *
  * The XN297 packets include a 2-byte CRC value which, when receiving, we can choose to ignore.
  * When transmitting we must calculate the CRC and include it in the packet.
+ *
+ * full show notes order
+ *    . mansion 1
+ *    . coffin
+ *    . madame leota
+ *    . mansion 2
+ *    . victor geist
+ *    . constance hatchaway
+ *    . ???
+ *    . the caretaker
+ *    . ???
+ *    . the singing busts
+ *    . ???
+ *    . mansion 3
  *
  * References
  *   https://lastminuteengineers.com/nrf24l01-arduino-wireless-communication/
@@ -419,17 +433,23 @@ void storyteller() {
 }
 
 void send_it() {
+  static uint8_t x = 0;
+  static uint16_t playback_pattern = 0xffff;
   uint32_t start, tmp;
 
   if (machine_state != STORYMAKER) {
     return;
   }
 
-  // send command to trigger immediate ornament playback
-  xmit_packet[0] = 0x02;    // playback cmd
-  xmit_packet[1] = 0x00;    // playback pattern doesn't seem to matter (as long as 0x02 is not part of this value)
-  xmit_packet[2] = 0x3f;    // countdown; each 'tick' = 4ms
-  xmit_packet[5] &= 0x0f;
+  // send command to trigger full mansion show
+  xmit_packet[0] = 0x02;                                          // playback cmd
+  xmit_packet[1] = (uint8_t)(playback_pattern & 0x00ff);          // the low byte of the playback pattern
+  xmit_packet[2] = 0x3f;                                          // countdown; each 'tick' = 4ms
+//xmit_packet[3] = 0x00;                                          // ??
+//xmit_packet[4] = xmit_packet[4];                                // needs to be group/network ID it seems
+  xmit_packet[5] &= 0x0f;                                         // the high nibble must be zero for playback
+//xmit_packet[6] = 0x0a;                                          // must be 0x0a
+  xmit_packet[7] = (uint8_t)((playback_pattern >> 8) & 0x00ff);   // the high byte of the playback patern
 
   print_msg(F("Sending immediate playback command."));
   start = millis() + (xmit_packet[2] * 4);
@@ -443,6 +463,7 @@ void send_it() {
     }
   }
   print_msg(F("Done."));
+  print_buf(xmit_packet, RADIO_PD_SIZE);
 }
 
 void cancel_playback() {
@@ -466,6 +487,7 @@ void cancel_playback() {
 void conduct_full_haunted_mansion_show() {
   uint16_t i, j, k;
   uint32_t start, tmp;
+  uint16_t full_playback_pattern = 0xffff;
 
   if (machine_state != STORYMAKER) {
     return;
@@ -499,7 +521,7 @@ void conduct_full_haunted_mansion_show() {
   xmit_packet[1] = 0;
   xmit_packet[2] = 0;
   xmit_packet[3] = 0;
-  //xmit_packet[5] |= 0x10;
+  xmit_packet[5] |= 0x10;
 
   // announce 75 times on each channel
   for(i=0;i<sizeof(channel);i++) {
@@ -538,8 +560,8 @@ void conduct_full_haunted_mansion_show() {
   radio.setChannel(radio_channel);
 
   // set payload for 'this is the channel'
-  xmit_packet[2] = xmit_packet[0];
   xmit_packet[0] = 0x0f;
+  xmit_packet[2] = xmit_packet[0];
 
   // announce we are staying on the current channel
   for (i=0;i<9;i++) {
@@ -550,14 +572,16 @@ void conduct_full_haunted_mansion_show() {
   }
   Serial.println(F(" Done."));
 
+  // remove the 'follow me' bit
+  xmit_packet[5] &= 0x0f;
+
   // -- STEP 2 --
   //
   // Announce that we're going to start a full show to all listening ornaments
   print_msg(F("Mansion Playback Announce (BONG)"));
   xmit_packet[0] = 0x06;
   xmit_packet[1] = 0x00;    // 0x05 and 0x00 work;
-  xmit_packet[2] = 0x4f;
-  xmit_packet[5] &= 0x0f;   // set top 4 bits to 0
+  xmit_packet[2] = 0x4f;    // countdown ticks
   do {
     xmit_packet[2]--;
     radio.flush_rx();
@@ -566,16 +590,31 @@ void conduct_full_haunted_mansion_show() {
     delay(11);
   } while (xmit_packet[2] > 0);
 
-  // delay for acks from ornaments
-  delay(2500);
+  // -- STEP 2A: Listen for Acknowledgements --
+  // maybe we do something with this another day, like craft the playback pattern based on which ornaments give us an ack?
+  // for now this is here just for debug/test purposes
+
+  // swap to listener mode
+  setup_receive();
+
+  // listen for acknowledgements
+  tmp = millis() + 3000;
+  while (millis() < tmp) {
+    storyteller();
+  }
+
+  // go back to transmit mode
+  setup_transmit();
 
   // -- STEP 3 --
-  //
-  // Playback sync countdown
+  // countdown to the start of playback
+  // this helps to get all the ornaments in sync
+
   print_msg(F("Mansion Playback Countdown"));
-  xmit_packet[0] = 0x02;    // playback cmd
-  xmit_packet[1] = 0xfe;    // playback pattern: all ornaments
-  xmit_packet[2] = 0x9f;    // countdown; each 'tick' = 4ms
+  xmit_packet[0] = 0x02;                                              // playback cmd
+  xmit_packet[1] = (uint8_t)(full_playback_pattern & 0x00ff);         // playback pattern low byte
+  xmit_packet[2] = 0x9f;                                              // number of countdown ticks; each 'tick' = 4ms
+  xmit_packet[7] = (uint8_t)((full_playback_pattern >> 8) & 0x00ff);  // the high byte of the playback patern
   
   start = millis() + (xmit_packet[2] * 4);
   while(xmit_packet[2] > 0) {
@@ -588,6 +627,7 @@ void conduct_full_haunted_mansion_show() {
     }
   }
 
+  print_buf(xmit_packet, RADIO_PD_SIZE);
   print_msg(F("Let The Show Begin!"));
 }
 
@@ -607,6 +647,7 @@ void storymaker() {
     // trigger full haunted mansion show
     case LONG_BTN_PRESS:
       conduct_full_haunted_mansion_show();
+      short_step = 1;   // make it so next short press sends a cancel command
       break;
 
     case REALLY_LONG_BTN_PRESS:

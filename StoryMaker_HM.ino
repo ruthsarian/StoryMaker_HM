@@ -431,17 +431,6 @@ void send_it() {
   xmit_packet[2] = 0x3f;    // countdown; each 'tick' = 4ms
   xmit_packet[5] &= 0x0f;
 
-/*
-  xmit_packet[0] = 0x09;
-  xmit_packet[1] = 0x05;
-  xmit_packet[2] = 0x3f;
-*/
-
-/*
-  Serial.println("Packet Preview:");
-  print_buf(xmit_packet, RADIO_PD_SIZE);
-*/
-
   print_msg(F("Sending immediate playback command."));
   start = millis() + (xmit_packet[2] * 4);
   while(xmit_packet[2] > 0) {
@@ -510,6 +499,7 @@ void conduct_full_haunted_mansion_show() {
   xmit_packet[1] = 0;
   xmit_packet[2] = 0;
   xmit_packet[3] = 0;
+  //xmit_packet[5] |= 0x10;
 
   // announce 75 times on each channel
   for(i=0;i<sizeof(channel);i++) {
@@ -544,11 +534,14 @@ void conduct_full_haunted_mansion_show() {
   radio.flush_rx();
   radio.flush_tx();
 
+  // switch to our target channel
+  radio.setChannel(radio_channel);
+
   // set payload for 'this is the channel'
   xmit_packet[2] = xmit_packet[0];
   xmit_packet[0] = 0x0f;
 
-  // staying on the current channel
+  // announce we are staying on the current channel
   for (i=0;i<9;i++) {
       radio.flush_rx();
       radio.flush_tx();
@@ -556,7 +549,6 @@ void conduct_full_haunted_mansion_show() {
       delay(2);
   }
   Serial.println(F(" Done."));
-
 
   // -- STEP 2 --
   //
@@ -595,6 +587,7 @@ void conduct_full_haunted_mansion_show() {
       xmit_packet[2] = (uint8_t)((start - tmp)/4);
     }
   }
+
   print_msg(F("Let The Show Begin!"));
 }
 

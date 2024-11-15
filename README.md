@@ -1,5 +1,5 @@
-# About
-This project is an attempt at communicating with [Hallmark Keepsake Disney The Haunted Mansion Collection](https://care.hallmark.com/s/article/Keepsake-Ornament-K) ornaments released starting in 2023. This project uses an [NRF24L01 module](https://www.seeedstudio.com/blog/2019/11/21/nrf24l01-getting-started-arduino-guide/) along with an [Arduino Nano](https://store-usa.arduino.cc/products/arduino-nano?selectedStore=us) to communicate with the ornaments.
+# StoryMaker HM
+This project is an attempt at communicating with [Hallmark Keepsake Disney The Haunted Mansion Collection](https://care.hallmark.com/s/article/Keepsake-Ornament-K) ornaments released in 2023 and 2024. This project uses an [NRF24L01 module](https://www.seeedstudio.com/blog/2019/11/21/nrf24l01-getting-started-arduino-guide/) along with an [Arduino Nano](https://store-usa.arduino.cc/products/arduino-nano?selectedStore=us) to communicate with the ornaments.
 
 ## Beware!
 This is a work in progress. The code and information is presented as-is without warranty or guarantee that it'll work. I'm simply sharing what I've developed, what I have found works for me, and hopefully it will work for you too. 

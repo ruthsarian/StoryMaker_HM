@@ -169,6 +169,23 @@ void descramble_buf(uint8_t *buf, uint8_t len) {
   }
 }
 
+void print_msg(const __FlashStringHelper* msg) {
+  char buffer[128];
+  memset(buffer, '\0', sizeof(buffer));
+  strlcpy_P(buffer, (const char PROGMEM *)msg, sizeof(buffer));
+  print_msg(buffer);
+}
+
+void print_msg(char *msg) {
+  Serial.println(msg);
+  #ifdef ENABLE_SSD1306
+    display.clearDisplay();
+    display.setCursor(0,0);
+    display.print(msg);
+    display.display();
+  #endif
+}
+
 void print_buf(uint8_t *buf, uint8_t len) {
   uint8_t i;
   char tmp[PRINT_BUF_SIZE];
@@ -420,10 +437,12 @@ void send_it() {
   xmit_packet[2] = 0x3f;
 */
 
+/*
   Serial.println("Packet Preview:");
   print_buf(xmit_packet, RADIO_PD_SIZE);
+*/
 
-  Serial.print(F("Sending immediate playback command..."));
+  print_msg(F("Sending immediate playback command."));
   start = millis() + (xmit_packet[2] * 4);
   while(xmit_packet[2] > 0) {
     radio.flush_rx();
@@ -434,7 +453,7 @@ void send_it() {
       xmit_packet[2] = (uint8_t)((start - tmp)/4);
     }
   }
-  Serial.println(F("Done."));
+  print_msg(F("Done."));
 }
 
 void cancel_playback() {
@@ -444,7 +463,7 @@ void cancel_playback() {
     return;
   }
 
-  Serial.println(F("Canceling Playback!"));
+  print_msg(F("Canceling Playback!"));
   xmit_packet[0] = 0x01;
   for (i=0;i<9;i++) {
       radio.flush_rx();
@@ -452,6 +471,7 @@ void cancel_playback() {
       xmit_payload(xmit_packet, RADIO_PD_SIZE);
       delay(2);
   }
+  print_msg(F("Done."));
 }
 
 void conduct_full_haunted_mansion_show() {
@@ -468,7 +488,7 @@ void conduct_full_haunted_mansion_show() {
   // -- STEP 1 --
   //
   // xmit group id and radio channel so everyone is listening on the same station to the same group id
-  Serial.print(F("Telling every ornament to tune in..."));
+  print_msg(F("Telling every ornament to tune in..."));
 
   // initialize payload
   // 0c = channel 0x31, 0d = channel 0x44, 0b = channel 0x1c
@@ -535,7 +555,7 @@ void conduct_full_haunted_mansion_show() {
   // -- STEP 2 --
   //
   // Announce that we're going to start a full show to all listening ornaments
-  Serial.println(F("Mansion Playback Announce (BONG)..."));
+  print_msg(F("Mansion Playback Announce (BONG)"));
   xmit_packet[0] = 0x06;
   xmit_packet[1] = 0x05;    // 0x05 and 0x00 work;
   xmit_packet[2] = 0x4f;
@@ -554,7 +574,7 @@ void conduct_full_haunted_mansion_show() {
   // -- STEP 3 --
   //
   // Playback sync countdown
-  Serial.println(F("Mansion Playback Countdown..."));
+  print_msg(F("Mansion Playback Countdown"));
   xmit_packet[0] = 0x02;    // playback cmd
   xmit_packet[1] = 0xfe;    // playback pattern: all ornaments
   xmit_packet[2] = 0x9f;    // countdown; each 'tick' = 4ms
@@ -570,7 +590,7 @@ void conduct_full_haunted_mansion_show() {
       xmit_packet[2] = (uint8_t)((start - tmp)/4);
     }
   }
-  Serial.println(F("Let The Show Begin!"));
+  print_msg(F("Let The Show Begin!"));
 }
 
 void storymaker() {
@@ -592,7 +612,7 @@ void storymaker() {
       break;
 
     case REALLY_LONG_BTN_PRESS:
-      Serial.println(F("Story Teller Mode"));
+      print_msg(F("Story Teller Mode"));
       machine_state = STORYTELLER;
       return;
       break;
@@ -625,14 +645,11 @@ void setup() {
       Serial.println(F("SSD1306 allocation failed"));
       for(;;); // Don't proceed, loop forever
     }
-    Serial.println("Display...");
     display.display();                    // display splash screen
     delay(2000);                          // Pause for 2 seconds
     display.clearDisplay();               // Clear the buffer
     display.setTextColor(SSD1306_WHITE);  // set text color
     display.cp437(true);                  // use full 256 char 'Code Page 437' font
-    display.print(F("Ready."));
-    display.display();                    // display splash screen
   #endif
 
   // initialize nRF module
@@ -652,7 +669,8 @@ void setup() {
   // set the initial radio_channel to transmit on
   radio_channel = channel[0];
 
-  Serial.println(F("Ready."));
+  // We're ready to go.
+  print_msg(F("Ready."));
 }
 
 void loop() {
@@ -665,9 +683,9 @@ void loop() {
     case STORYTELLER:
       storyteller();
       if (button_handler()) {
-        Serial.println("Story Maker Mode.");
+        print_msg(F("Story Maker Mode"));
         machine_state = STORYMAKER;
-        print_buf(xmit_packet, RADIO_PD_SIZE);
+        //print_buf(xmit_packet, RADIO_PD_SIZE);
       }
       break;
     case STORYMAKER:

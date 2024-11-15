@@ -499,11 +499,17 @@ void conduct_full_haunted_mansion_show() {
     case 0x31:
       xmit_packet[0] = 0x0c;
       break;
-    default:
+    case 0x1c:
       xmit_packet[0] = 0x0b;
       break;
+    default:
+      Serial.print("ERROR: unknown radio channel ");
+      Serial.println(radio_channel, HEX);
+      break;
   }
-  xmit_packet[6] = 0x0a;
+  xmit_packet[1] = 0;
+  xmit_packet[2] = 0;
+  xmit_packet[3] = 0;
 
   // announce 75 times on each channel
   for(i=0;i<sizeof(channel);i++) {
@@ -557,9 +563,9 @@ void conduct_full_haunted_mansion_show() {
   // Announce that we're going to start a full show to all listening ornaments
   print_msg(F("Mansion Playback Announce (BONG)"));
   xmit_packet[0] = 0x06;
-  xmit_packet[1] = 0x05;    // 0x05 and 0x00 work;
+  xmit_packet[1] = 0x00;    // 0x05 and 0x00 work;
   xmit_packet[2] = 0x4f;
-  xmit_packet[5] &= 0x0f;
+  xmit_packet[5] &= 0x0f;   // set top 4 bits to 0
   do {
     xmit_packet[2]--;
     radio.flush_rx();
@@ -578,8 +584,7 @@ void conduct_full_haunted_mansion_show() {
   xmit_packet[0] = 0x02;    // playback cmd
   xmit_packet[1] = 0xfe;    // playback pattern: all ornaments
   xmit_packet[2] = 0x9f;    // countdown; each 'tick' = 4ms
-  xmit_packet[5] &= 0x0f;
-
+  
   start = millis() + (xmit_packet[2] * 4);
   while(xmit_packet[2] > 0) {
     radio.flush_rx();
@@ -685,7 +690,7 @@ void loop() {
       if (button_handler()) {
         print_msg(F("Story Maker Mode"));
         machine_state = STORYMAKER;
-        //print_buf(xmit_packet, RADIO_PD_SIZE);
+        print_buf(xmit_packet, RADIO_PD_SIZE);
       }
       break;
     case STORYMAKER:

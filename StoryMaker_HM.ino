@@ -40,7 +40,7 @@
  *   https://github.com/martinbudden/NRF24_RX/blob/master/src/xn297.cpp
  */
 
-//#define ENABLE_SSD1306    // if defined, support for the OLED display is enabled
+#define ENABLE_SSD1306    // if defined, support for the OLED display is enabled
 
 // nRF2401 Module Support
 #include <RF24.h>
@@ -49,20 +49,18 @@
 #include <printf.h>
 
 // SSD1306 OLED Display Support
-#include <SPI.h>
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
-
-// SSD1306 OLED Display Setup
-// default pins are SDA and SCL for the device you're using
-// for a Nano, SDA = A4, SCL = A5
-#define SCREEN_WIDTH    128
-#define SCREEN_HEIGHT   32
-#define OLED_RESET      -1    // Reset pin # (or -1 if sharing Arduino reset pin)
-#define SCREEN_ADDRESS  0x3C  // 0x3D for 128x64, 0x3C for 128x32
-
 #ifdef ENABLE_SSD1306
+  #include <Adafruit_GFX.h>
+  #include <Adafruit_SSD1306.h>
+
+  // SSD1306 OLED Display Setup
+  // default pins are SDA and SCL for the device you're using
+  // for a Nano, SDA = A4, SCL = A5
+  #define SCREEN_WIDTH    128
+  #define SCREEN_HEIGHT   32
+  #define OLED_RESET      -1    // Reset pin # (or -1 if sharing Arduino reset pin)
+  #define SCREEN_ADDRESS  0x3C  // 0x3D for 128x64, 0x3C for 128x32
+
   Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #endif
 

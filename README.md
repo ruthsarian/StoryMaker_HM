@@ -21,7 +21,7 @@ When the show starts, the mansion issues a series of commands that count down to
 The timing of events for the full show are hard-coded into the ornaments. The mansion does **NOT** direct when an ornament should activate. Knowing which ornaments are included in the show, each ornament is able to calculate its own timings on when to blink in sync with the show and to start their own portion of the show.
 
 # Wiring
-TODO: Provide explanation on how to connect the Arduino Nano, nRF24L01 module, and button together for this to all work. For now look you'll have to go by the source code which identifies which pins on the Arduino connect to what.
+![Fritzing image of an Arduino Nano, nRF24L01 module, and a button wired together to run this code.](storymaker_breadboard.png)
 
 # Technical Details
 

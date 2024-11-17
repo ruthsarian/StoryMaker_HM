@@ -434,24 +434,30 @@ void storyteller() {
 
 void send_it() {
   static uint8_t x = 0;
-  static uint16_t playback_pattern = 0xffff;
+  static uint16_t playback_pattern = 0xfffc;
   uint32_t start, tmp;
 
   if (machine_state != STORYMAKER) {
     return;
   }
 
+  if (x++ == 0) {
+    announce_radio_config();
+  }
+
   // send command to trigger full mansion show
   xmit_packet[0] = 0x02;                                          // playback cmd
   xmit_packet[1] = (uint8_t)(playback_pattern & 0x00ff);          // the low byte of the playback pattern
   xmit_packet[2] = 0x3f;                                          // countdown; each 'tick' = 4ms
-//xmit_packet[3] = 0x00;                                          // ??
+  xmit_packet[3] = 0;                                             // delay execution of command; value is in seconds
 //xmit_packet[4] = xmit_packet[4];                                // needs to be group/network ID it seems
-  xmit_packet[5] &= 0x0f;                                         // the high nibble must be zero for playback
+  xmit_packet[5] &= 0x0f;                                         // the high nibble must not be 1 for playback
+//xmit_packet[5] = (xmit_packet[5] + 1) & 0x0f;
 //xmit_packet[6] = 0x0a;                                          // must be 0x0a
   xmit_packet[7] = (uint8_t)((playback_pattern >> 8) & 0x00ff);   // the high byte of the playback patern
 
-  print_msg(F("Sending immediate playback command."));
+//print_msg(F("Sending immediate playback command."));
+  print_msg(F("Sending command."));
   start = millis() + (xmit_packet[2] * 4);
   while(xmit_packet[2] > 0) {
     radio.flush_rx();
@@ -484,21 +490,9 @@ void cancel_playback() {
   print_msg(F("Done."));
 }
 
-void conduct_full_haunted_mansion_show() {
-  uint16_t i, j, k;
-  uint32_t start, tmp;
-  uint16_t full_playback_pattern = 0xffff;
+void announce_radio_config() {
+  uint8_t i, j;
 
-  if (machine_state != STORYMAKER) {
-    return;
-  }
-
-  Serial.println();
-  Serial.println(F("-- Full Haunted Mansion Show --"));
-
-  // -- STEP 1 --
-  //
-  // xmit group id and radio channel so everyone is listening on the same station to the same group id
   print_msg(F("Telling every ornament to tune in..."));
 
   // initialize payload
@@ -521,7 +515,7 @@ void conduct_full_haunted_mansion_show() {
   xmit_packet[1] = 0;
   xmit_packet[2] = 0;
   xmit_packet[3] = 0;
-  xmit_packet[5] |= 0x10;
+  xmit_packet[5] = (xmit_packet[5] & 0x0f) | 0x10;
 
   // announce 75 times on each channel
   for(i=0;i<sizeof(channel);i++) {
@@ -574,9 +568,25 @@ void conduct_full_haunted_mansion_show() {
 
   // remove the 'follow me' bit
   xmit_packet[5] &= 0x0f;
+}
+
+void conduct_full_haunted_mansion_show() {
+  uint16_t i, j, k;
+  uint32_t start, tmp;
+  uint16_t full_playback_pattern = 0xffff;
+
+  if (machine_state != STORYMAKER) {
+    return;
+  }
+
+  Serial.println();
+  Serial.println(F("-- Full Haunted Mansion Show --"));
+
+  // -- STEP 1 --
+  // xmit group id and radio channel so everyone is listening on the same station to the same group id
+  announce_radio_config();
 
   // -- STEP 2 --
-  //
   // Announce that we're going to start a full show to all listening ornaments
   print_msg(F("Mansion Playback Announce (BONG)"));
   xmit_packet[0] = 0x06;
@@ -590,7 +600,9 @@ void conduct_full_haunted_mansion_show() {
     delay(11);
   } while (xmit_packet[2] > 0);
 
-  // -- STEP 2A: Listen for Acknowledgements --
+  // -- STEP 3 --
+  // Listen for Acknowledgements
+  //
   // maybe we do something with this another day, like craft the playback pattern based on which ornaments give us an ack?
   // for now this is here just for debug/test purposes
 
@@ -606,7 +618,7 @@ void conduct_full_haunted_mansion_show() {
   // go back to transmit mode
   setup_transmit();
 
-  // -- STEP 3 --
+  // -- STEP 4 --
   // countdown to the start of playback
   // this helps to get all the ornaments in sync
 

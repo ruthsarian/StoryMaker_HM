@@ -39,7 +39,7 @@ When an ornament button is pressed, that ornament will start sending out packets
 | `01` | command |
 | `02` | command parameter 1 |
 | `03` | countdown |
-| `04` | `0x00` |
+| `04` | command delay in seconds |
 | `05` | group id, byte 1 |
 | `06` | group id, byte 2 |
 | `07` | `0x0a` |

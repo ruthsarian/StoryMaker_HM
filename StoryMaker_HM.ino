@@ -434,7 +434,7 @@ void storyteller() {
 
 void send_it() {
   static uint8_t x = 0;
-  static uint16_t playback_pattern = 0xfffc;
+  static uint16_t playback_pattern = 0x0082;
   uint32_t start, tmp;
 
   if (machine_state != STORYMAKER) {
@@ -452,8 +452,7 @@ void send_it() {
   xmit_packet[3] = 0;                                             // delay execution of command; value is in seconds
 //xmit_packet[4] = xmit_packet[4];                                // needs to be group/network ID it seems
   xmit_packet[5] &= 0x0f;                                         // the high nibble must not be 1 for playback
-//xmit_packet[5] = (xmit_packet[5] + 1) & 0x0f;
-//xmit_packet[6] = 0x0a;                                          // must be 0x0a
+  xmit_packet[6] = 0x0a;                                          // must be 0x0a
   xmit_packet[7] = (uint8_t)((playback_pattern >> 8) & 0x00ff);   // the high byte of the playback patern
 
 //print_msg(F("Sending immediate playback command."));
